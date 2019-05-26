@@ -44,13 +44,21 @@ public:
     return mt;
   }
 
-   const std::vector<std::vector<double>> &getData() const {
-     return data;
-   }
+  const std::vector<std::vector<double>> &getData() const {
+    return data;
+  }
+  
+  std::vector<std::vector<double>> &getData() {
+    return data;
+  }
 
-   std::vector<std::vector<double>> &getData() {
-     return data;
-   }
+  const std::vector<double> &operator[](int idx) const {
+    return data[idx];
+  }
+
+  std::vector<double> &operator[](int idx) {
+    return data[idx];
+  }
 
   Matrix &operator=(const Matrix &other) {
     data = other.getData();
