@@ -12,7 +12,7 @@ int main() {
       a[i][j] = 10.0 * rand() / RAND_MAX;
     }
   }
-  linalg::Matrix ma(a);
+  linalg::matrix ma(a);
 
   struct timeval start_time, end_time;
   double time;

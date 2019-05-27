@@ -13,8 +13,8 @@ int main() {
       b[i][j] = 10.0 * rand() / RAND_MAX;
     }
   }
-  linalg::Matrix ma(a);
-  linalg::Matrix mb(b);
+  linalg::matrix ma(a);
+  linalg::matrix mb(b);
 
   struct timeval start_time, end_time;
   double time;

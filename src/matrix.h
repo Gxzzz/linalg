@@ -6,135 +6,157 @@
 #include <cmath>
 #include "simd.h"
 namespace linalg {
-class Matrix {
+class matrix {
 public:
-  Matrix(const Matrix &other) {
-    data = other.getData();
-  }
+  matrix(const matrix &other);
+  matrix(matrix &&other);
+  matrix(int _Rows, int _Cols, double _val = 0.0);
+  matrix(const std::vector<std::vector<double>> &_data);
+  // matrix(const boost::python::list &iterable);
+  const int n_row() const;
+  const int n_col() const;
 
-  Matrix(Matrix &&other) {
-    data.swap(other.getData());
-  }
+  static matrix eye(int _size);
 
-  Matrix(int _Rows, int _Cols, double _val = 0.0) {
-    /*Exception*/
-    data.assign(_Rows, std::vector<double>(_Cols, _val));
-  }
+  const std::vector<std::vector<double>> &getData() const;
+  std::vector<std::vector<double>> &getData();
 
-  Matrix(const std::vector<std::vector<double>> &_data) {
-    data = _data;
-  }
+  const std::vector<double> &operator[](int idx) const;
+  std::vector<double> &operator[](int idx);
 
-  // Matrix(const boost::python::list &iterable);
+  matrix &operator=(const matrix &other);
+  matrix &operator=(matrix &&other);
 
-  const int n_row() const {
-    return data.size();
-  }
+  friend std::ostream &operator<<(std::ostream &output, const matrix &mt);
 
-  const int n_col() const {
-    return data[0].size();
-  }
-
-  static Matrix eye(int _size) {
-    /*Exception*/
-    Matrix mt(_size, _size);
-    auto &_mt_data = mt.getData();
-    for (int i = 0; i < _size; ++i)
-      _mt_data[i][i] = 1.0;
-    return mt;
-  }
-
-  const std::vector<std::vector<double>> &getData() const {
-    return data;
-  }
-  
-  std::vector<std::vector<double>> &getData() {
-    return data;
-  }
-
-  const std::vector<double> &operator[](int idx) const {
-    return data[idx];
-  }
-
-  std::vector<double> &operator[](int idx) {
-    return data[idx];
-  }
-
-  Matrix &operator=(const Matrix &other) {
-    data = other.getData();
-    return *this;
-  }
-
-  Matrix &operator=(Matrix &&other) {
-    data.swap(other.getData());
-    return *this;
-  }
-
-  friend std::ostream &operator << (std::ostream &output, const Matrix &mt) {
-    auto &_mt_data = mt.getData();
-    for (auto &row : _mt_data) {
-      int sz = row.size();
-      for (int j = 0; j < sz; ++j)
-        output << row[j] << " \n"[j == sz - 1];
-    }
-    return output;
-  }
-
-  Matrix slice(int row_start, int row_end, int row_step, int col_start, int col_end, int col_step) {
-    /*
-    */ 
-    int _new_n_row = (row_end - row_start + row_step - 1) / row_step;
-    int _new_n_col = (col_end - col_start + col_step - 1) / col_step;
-    Matrix mt(_new_n_row, _new_n_col);
-    auto &_mt_data = mt.getData();
-#pragma omp parallel for
-    for (int i = 0; i < _new_n_row; ++i)
-      for (int j = 0; j < _new_n_col; ++j)
-        _mt_data[i][j] = data[row_start + i * row_step][col_start + j * col_step];
-    return mt;
-  }
-
-  Matrix transpose() const {
-    int _n_row = n_row();
-    int _n_col = n_col();
-    Matrix mt(_n_col, _n_row);
-    auto &_mt_data = mt.getData();
-    for (int i = 0; i < _n_col; ++i)
-      for (int j = 0; j < _n_row; ++j)
-        _mt_data[i][j] = data[j][i];
-    return mt;
-  }
-
-  Matrix reshape(int _row, int _col) {
-    /* Exception
-    */
-    Matrix mt(_row, _col);
-    auto &_mt_data = mt.getData();
-    int _n_col = n_col();
-#pragma omp parallel for
-    for (int i = 0; i < _row; ++i) {
-      for (int j = 0; j < _col; ++j) {
-        int tmp = i * _col + j;
-        int _i = tmp / _n_col;
-        int _j = tmp % _n_col;
-        _mt_data[i][j] = data[_i][_j];
-      }
-    }
-    return mt;
-  }
-
-
-
+  matrix slice(int row_start, int row_end, int row_step, int col_start, int col_end, int col_step);
+  matrix transpose() const;
+  matrix reshape(int _row, int _col);
 protected:
   std::vector<std::vector<double>> data;
 };
 
-Matrix operator+(const Matrix &a, const Matrix &b) {
+matrix::matrix(const matrix &other) {
+  data = other.getData();
+}
+
+matrix::matrix(matrix &&other) {
+  data.swap(other.getData());
+}
+
+matrix::matrix(int _Rows, int _Cols, double _val) {
+  /*Exception*/
+  data.assign(_Rows, std::vector<double>(_Cols, _val));
+}
+
+matrix::matrix(const std::vector<std::vector<double>> &_data) {
+  data = _data;
+}
+
+// matrix(const boost::python::list &iterable);
+
+const int matrix::n_row() const {
+  return data.size();
+}
+
+const int matrix::n_col() const {
+  return data[0].size();
+}
+
+matrix matrix::eye(int _size) {
+  /*Exception*/
+  matrix mt(_size, _size);
+  auto &_mt_data = mt.getData();
+  for (int i = 0; i < _size; ++i)
+    _mt_data[i][i] = 1.0;
+  return mt;
+}
+
+const std::vector<std::vector<double>> &matrix::getData() const {
+  return data;
+}
+
+std::vector<std::vector<double>> &matrix::getData() {
+  return data;
+}
+
+const std::vector<double> &matrix::operator[](int idx) const {
+  return data[idx];
+}
+
+std::vector<double> &matrix::operator[](int idx) {
+  return data[idx];
+}
+
+matrix &matrix::operator=(const matrix &other) {
+  data = other.getData();
+  return *this;
+}
+
+matrix &matrix::operator=(matrix &&other) {
+  data.swap(other.getData());
+  return *this;
+}
+
+std::ostream &operator<<(std::ostream &output, const matrix &mt) {
+  auto &_mt_data = mt.getData();
+  for (auto &row : _mt_data) {
+    int sz = row.size();
+    for (int j = 0; j < sz; ++j)
+      output << row[j] << " \n"[j == sz - 1];
+  }
+  return output;
+}
+
+matrix matrix::slice(int row_start, int row_end, int row_step, int col_start, int col_end, int col_step) {
+  /*
+  */ 
+  int _new_n_row = (row_end - row_start + row_step - 1) / row_step;
+  int _new_n_col = (col_end - col_start + col_step - 1) / col_step;
+  matrix mt(_new_n_row, _new_n_col);
+  auto &_mt_data = mt.getData();
+#pragma omp parallel for
+  for (int i = 0; i < _new_n_row; ++i)
+    for (int j = 0; j < _new_n_col; ++j)
+      _mt_data[i][j] = data[row_start + i * row_step][col_start + j * col_step];
+  return mt;
+}
+
+matrix matrix::transpose() const {
+  int _n_row = n_row();
+  int _n_col = n_col();
+  matrix mt(_n_col, _n_row);
+  auto &_mt_data = mt.getData();
+  for (int i = 0; i < _n_col; ++i)
+    for (int j = 0; j < _n_row; ++j)
+      _mt_data[i][j] = data[j][i];
+  return mt;
+}
+
+matrix matrix::reshape(int _row, int _col) {
+  /* Exception
+  */
+  matrix mt(_row, _col);
+  auto &_mt_data = mt.getData();
+  int _n_col = n_col();
+#pragma omp parallel for
+  for (int i = 0; i < _row; ++i) {
+    for (int j = 0; j < _col; ++j) {
+      int tmp = i * _col + j;
+      int _i = tmp / _n_col;
+      int _j = tmp % _n_col;
+      _mt_data[i][j] = data[_i][_j];
+    }
+  }
+  return mt;
+}
+
+matrix operator+(const matrix &a, const matrix &b) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
   /* MatrixSizeDismatchException
   */
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
   auto &_b_data = b.getData();
@@ -158,10 +180,10 @@ Matrix operator+(const Matrix &a, const Matrix &b) {
   return res;
 }
 
-Matrix operator+(const Matrix &a, const double &val) {
+matrix operator+(const matrix &a, const double &val) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -183,10 +205,10 @@ Matrix operator+(const Matrix &a, const double &val) {
   return res;
 }
 
-Matrix operator+(const double &val, const Matrix &a) {
+matrix operator+(const double &val, const matrix &a) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -208,12 +230,12 @@ Matrix operator+(const double &val, const Matrix &a) {
   return res;
 }
 
-Matrix operator-(const Matrix &a, const Matrix &b) {
+matrix operator-(const matrix &a, const matrix &b) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
   /* MatrixSizeDismatchException
   */
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
   auto &_b_data = b.getData();
@@ -237,10 +259,10 @@ Matrix operator-(const Matrix &a, const Matrix &b) {
   return res;
 }
 
-Matrix operator-(const Matrix &a, const double &val) {
+matrix operator-(const matrix &a, const double &val) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -263,10 +285,10 @@ Matrix operator-(const Matrix &a, const double &val) {
   return res;
 }
 
-Matrix operator-(const double &val, const Matrix &a) {
+matrix operator-(const double &val, const matrix &a) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -288,12 +310,12 @@ Matrix operator-(const double &val, const Matrix &a) {
   return res;
 }
 
-Matrix operator*(const Matrix &a, const Matrix &b) {
+matrix operator*(const matrix &a, const matrix &b) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
   /* MatrixSizeDismatchException
   */
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
   auto &_b_data = b.getData();
@@ -317,10 +339,10 @@ Matrix operator*(const Matrix &a, const Matrix &b) {
   return res;
 }
 
-Matrix operator*(const Matrix &a, const double &val) {
+matrix operator*(const matrix &a, const double &val) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -343,10 +365,10 @@ Matrix operator*(const Matrix &a, const double &val) {
   return res;
 }
 
-Matrix operator*(const double &val, const Matrix &a) {
+matrix operator*(const double &val, const matrix &a) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -369,12 +391,12 @@ Matrix operator*(const double &val, const Matrix &a) {
   return res;
 }
 
-Matrix operator/(const Matrix &a, const Matrix &b) {
+matrix operator/(const matrix &a, const matrix &b) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
   /* MatrixSizeDismatchException
   */
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
   auto &_b_data = b.getData();
@@ -398,10 +420,10 @@ Matrix operator/(const Matrix &a, const Matrix &b) {
   return res;
 }
 
-Matrix operator/(const Matrix &a, const double &val) {
+matrix operator/(const matrix &a, const double &val) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -423,12 +445,12 @@ Matrix operator/(const Matrix &a, const double &val) {
   return res;
 }
 
-Matrix operator/(const double &val, const Matrix &a) {
+matrix operator/(const double &val, const matrix &a) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
   /* Exception
   */
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -450,10 +472,10 @@ Matrix operator/(const double &val, const Matrix &a) {
   return res;
 }
 
-Matrix operator-(const Matrix &a) {
+matrix operator-(const matrix &a) {
   int _n_row = a.n_row();
   int _n_col = a.n_col();
-  Matrix res(_n_row, _n_col); 
+  matrix res(_n_row, _n_col); 
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
 #pragma omp parallel for
@@ -474,14 +496,14 @@ Matrix operator-(const Matrix &a) {
   return res;
 }
 
-Matrix matmul(const Matrix &a, const Matrix &b) {
+matrix matmul(const matrix &a, const matrix &b) {
   int _a_row = a.n_row();
   int _a_col = a.n_col();
   int _b_row = b.n_row();
   int _b_col = b.n_col();
   /* MatrixScaleNotMatchedException
   */
-  Matrix res(_a_row, _b_col);
+  matrix res(_a_row, _b_col);
   auto &_res_data = res.getData();
   auto &_a_data = a.getData();
   auto &_b_data = b.getData();
@@ -513,7 +535,7 @@ Matrix matmul(const Matrix &a, const Matrix &b) {
   return res;
 }
  
-double sum(const Matrix &mt) {
+double sum(const matrix &mt) {
   /* Empty_Matrix_Exception
   */
   auto &_mt_data = mt.getData();
@@ -541,12 +563,12 @@ double sum(const Matrix &mt) {
   return sum;
 }
 
-Matrix sum(const Matrix &mt, int row_major) {
+matrix sum(const matrix &mt, int row_major) {
   auto &_mt_data = mt.getData();
   int n_rows = mt.n_row();
   int n_cols = mt.n_col();
   if (row_major) {
-    Matrix res(n_rows, 1);
+    matrix res(n_rows, 1);
     auto &_res_data = res.getData();
     int num_block = n_cols / DVEC_SIZE;
     int num_rem = n_cols % DVEC_SIZE;
@@ -565,7 +587,7 @@ Matrix sum(const Matrix &mt, int row_major) {
     }
     return res;
   } else {
-    Matrix res(1, n_cols);
+    matrix res(1, n_cols);
     auto &_res_data = res.getData()[0];
     int num_block = n_cols / DVEC_SIZE;
     int num_rem = n_cols % DVEC_SIZE;
@@ -586,7 +608,7 @@ Matrix sum(const Matrix &mt, int row_major) {
   }
 }
 
-double mean(const Matrix &mt) {
+double mean(const matrix &mt) {
   /* Empty_Matrix_Exception
   */
   auto &_mt_data = mt.getData();
@@ -595,22 +617,22 @@ double mean(const Matrix &mt) {
   return sum(mt) / (n_rows * n_cols);
 }
   
-Matrix mean(const Matrix &mt, int row_major) {
+matrix mean(const matrix &mt, int row_major) {
   auto &_mt_data = mt.getData();
   int n_rows = _mt_data.size();
   int n_cols = _mt_data[0].size();
-  Matrix ret = sum(mt, row_major);
+  matrix ret = sum(mt, row_major);
   return ret / (row_major ? (n_cols) : (n_rows));
 }
  
-Matrix tile(const Matrix &mt, int row_count, int col_count) {
+matrix tile(const matrix &mt, int row_count, int col_count) {
   auto &_mt_data = mt.getData();
   int _n_row = mt.n_row();
   int _n_col = mt.n_col();
   int _new_n_row = _n_row * row_count;
   int _new_n_col = _n_col * col_count;
 
-  Matrix res(_new_n_row, _new_n_col);
+  matrix res(_new_n_row, _new_n_col);
   auto &_res_data = res.getData();
 #pragma omp parallel for
   for (int i = 0; i < _new_n_row; ++i) {
@@ -632,7 +654,7 @@ Matrix tile(const Matrix &mt, int row_count, int col_count) {
   return res;
 }
 
-Matrix inv(const Matrix &mt) {
+matrix inv(const matrix &mt) {
   /*Exception*/
   int n = mt.n_row();
   auto &_mt_data = mt.getData();
@@ -644,13 +666,6 @@ Matrix inv(const Matrix &mt) {
       aug_data[i][j] = _mt_data[i][j];
     }
   }
-  // for (int i = 0; i < n; ++i) {
-  //   for (int j = 0; j < n * 2; ++j) {
-  //     printf("%10.4f", aug_data[i][j]);
-  //   }
-  //   puts("");
-  // }
-  // puts("");
   for (int k = 0; k < n; ++k) {
     int pivot = k;
     for (int i = k + 1; i < n; ++i) {
@@ -659,9 +674,6 @@ Matrix inv(const Matrix &mt) {
     }
     if (pivot != k) {
       aug_data[k].swap(aug_data[pivot]);
-    }
-    if (fabs(aug_data[k][k]) < eps) {
-      puts("1");
     }
     /* NotInvertibleException
     */
@@ -688,13 +700,6 @@ Matrix inv(const Matrix &mt) {
         }
       }
     }
-    // for (int i = 0; i < n; ++i) {
-    //   for (int j = 0; j < n * 2; ++j) {
-    //     printf("%10.4f", aug_data[i][j]);
-    //   }
-    //   puts("");
-    // }
-    // puts("");
   }
   for (int k = n - 1; k; --k) {
 #pragma omp parallel for
@@ -715,7 +720,7 @@ Matrix inv(const Matrix &mt) {
       }
     }
   }
-  Matrix res(n, n);
+  matrix res(n, n);
   auto &_res_data = res.getData();
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {

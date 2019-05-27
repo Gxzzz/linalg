@@ -1,113 +1,34 @@
 #ifndef CSR_MATRIX_H
 #define CSR_MATRIX_H
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <utility>
+#include <iostream>
 #include "matrix.h"
 namespace linalg {
 class csr_matrix {
 public:
-  csr_matrix(int _n_rows, int _n_cols) {
-    n_rows = _n_rows;
-    n_cols = _n_cols;
-    row_ptr.assign(_n_rows + 1, 0);
-  }
+  csr_matrix(int _n_rows, int _n_cols);
+  csr_matrix(const std::vector<std::vector<double>> &mt);
+  csr_matrix(const csr_matrix &other);
+  csr_matrix(csr_matrix &&other);
 
-  csr_matrix(const std::vector<std::vector<double>> &mt) {
-    n_rows = mt.size();
-    n_cols = mt.size() > 0 ? mt[0].size() : 0;
-    row_ptr.resize(n_rows + 1);
-    for (int i = 0; i < n_rows; ++i) {
-      row_ptr[i] = col_ind.size();
-      for (int j = 0; j < n_cols; ++j) {
-        if (fabs(mt[i][j]) > eps) {
-          val.emplace_back(mt[i][j]);
-          col_ind.emplace_back(j);
-        }
-      }
-    }
-    row_ptr[n_rows] = col_ind.size();
-  }
-
-  csr_matrix(const csr_matrix &other) {
-    n_rows = other.n_row();
-    n_cols = other.n_col();
-    val = other.getVal();
-    row_ptr = other.getRowPtr();
-    col_ind = other.getColInd();
-  }
-
-  csr_matrix(csr_matrix &&other) {
-    n_rows = other.n_row();
-    n_cols = other.n_col();
-    val.swap(other.getVal());
-    row_ptr.swap(other.getRowPtr());
-    col_ind.swap(other.getColInd());
-  }
-
-  const int n_row() const {
-    return n_rows;
-  }
-
-  const int n_col() const {
-    return n_cols;
-  }
-
-  const std::vector<double> &getVal() const {
-    return val;
-  }
-  
-  std::vector<double> &getVal() {
-    return val;
-  }
-
-  const std::vector<int> &getRowPtr() const {
-    return row_ptr;
-  }
-  
-  std::vector<int> &getRowPtr() {
-    return row_ptr;
-  }
-
-  const std::vector<int> &getColInd() const {
-    return col_ind;
-  }
-  
-  std::vector<int> &getColInd() {
-    return col_ind;
-  }
-
-  csr_matrix &operator=(const csr_matrix &other) {
-    n_rows = other.n_row();
-    n_cols = other.n_col();
-    val = other.getVal();
-    row_ptr = other.getRowPtr();
-    col_ind = other.getColInd();
-    return *this;
-  }
-
-  csr_matrix &operator=(csr_matrix &&other) {
-    n_rows = other.n_row();
-    n_cols = other.n_col();
-    val.swap(other.getVal());
-    row_ptr.swap(other.getRowPtr());
-    col_ind.swap(other.getColInd());
-    return *this;
-  }
+  const int n_row() const;
+  const int n_col() const;
+  const std::vector<double> &getVal() const;
+  std::vector<double> &getVal();
+  const std::vector<int> &getRowPtr() const;
+  std::vector<int> &getRowPtr();
+  const std::vector<int> &getColInd() const;
+  std::vector<int> &getColInd();
+  csr_matrix &operator=(const csr_matrix &other);
+  csr_matrix &operator=(csr_matrix &&other);
 
   std::vector<double> dot(const std::vector<double> &other);
   csr_matrix matmul(const csr_matrix &other);
 
-  friend std::ostream &operator<<(std::ostream &output, const csr_matrix &mt) {
-    int n_rows = mt.n_row();
-    int n_cols = mt.n_col();
-    const auto &row_ptr = mt.getRowPtr();
-    const auto &col_ind = mt.getColInd();
-    const auto &val = mt.getVal();
-    for (int i = 0; i < n_rows; ++i) {
-      for (int p = row_ptr[i]; p < row_ptr[i + 1]; ++p) {
-        output << "(" << i << ", " << col_ind[p] << ")" << ": " << val[p] << "\n";
-      }
-    }
-    return output;
-  }
+  friend std::ostream &operator<<(std::ostream &output, const csr_matrix &mt);
 
 private:
   int n_rows;
@@ -115,6 +36,94 @@ private:
   std::vector<double> val;
   std::vector<int> row_ptr, col_ind;
 };
+
+csr_matrix::csr_matrix(int _n_rows, int _n_cols) {
+  n_rows = _n_rows;
+  n_cols = _n_cols;
+  row_ptr.assign(_n_rows + 1, 0);
+}
+
+csr_matrix::csr_matrix(const std::vector<std::vector<double>> &mt) {
+  n_rows = mt.size();
+  n_cols = mt.size() > 0 ? mt[0].size() : 0;
+  row_ptr.resize(n_rows + 1);
+  for (int i = 0; i < n_rows; ++i) {
+    row_ptr[i] = col_ind.size();
+    for (int j = 0; j < n_cols; ++j) {
+      if (fabs(mt[i][j]) > eps) {
+        val.emplace_back(mt[i][j]);
+        col_ind.emplace_back(j);
+      }
+    }
+  }
+  row_ptr[n_rows] = col_ind.size();
+}
+
+csr_matrix::csr_matrix(const csr_matrix &other) {
+  n_rows = other.n_row();
+  n_cols = other.n_col();
+  val = other.getVal();
+  row_ptr = other.getRowPtr();
+  col_ind = other.getColInd();
+}
+
+csr_matrix::csr_matrix(csr_matrix &&other) {
+  n_rows = other.n_row();
+  n_cols = other.n_col();
+  val.swap(other.getVal());
+  row_ptr.swap(other.getRowPtr());
+  col_ind.swap(other.getColInd());
+}
+
+const int csr_matrix::n_row() const {
+  return n_rows;
+}
+
+const int csr_matrix::n_col() const {
+  return n_cols;
+}
+
+const std::vector<double> &csr_matrix::getVal() const {
+  return val;
+}
+
+std::vector<double> &csr_matrix::getVal() {
+  return val;
+}
+
+const std::vector<int> &csr_matrix::getRowPtr() const {
+  return row_ptr;
+}
+
+std::vector<int> &csr_matrix::getRowPtr() {
+  return row_ptr;
+}
+
+const std::vector<int> &csr_matrix::getColInd() const {
+  return col_ind;
+}
+
+std::vector<int> &csr_matrix::getColInd() {
+  return col_ind;
+}
+
+csr_matrix &csr_matrix::operator=(const csr_matrix &other) {
+  n_rows = other.n_row();
+  n_cols = other.n_col();
+  val = other.getVal();
+  row_ptr = other.getRowPtr();
+  col_ind = other.getColInd();
+  return *this;
+}
+
+csr_matrix &csr_matrix::operator=(csr_matrix &&other) {
+  n_rows = other.n_row();
+  n_cols = other.n_col();
+  val.swap(other.getVal());
+  row_ptr.swap(other.getRowPtr());
+  col_ind.swap(other.getColInd());
+  return *this;
+}
 
 std::vector<double> csr_matrix::dot(const std::vector<double> &other) {
   std::vector<double> res(n_rows);
@@ -152,7 +161,7 @@ csr_matrix csr_matrix::matmul(const csr_matrix &other) {
         tmp.push_back({b_col_ind[j], v * b_val[j]});
       }
     }
-    sort(tmp.begin(), tmp.end());
+    std::sort(tmp.begin(), tmp.end());
     for (int j = 0, pre = 0; j <= tmp.size(); ++j) {
       if (j == tmp.size() || tmp[j].first != tmp[pre].first) {
         double val = 0;
@@ -168,6 +177,20 @@ csr_matrix csr_matrix::matmul(const csr_matrix &other) {
   }
   res_row_ptr[n_rows] = res_val.size();
   return res;
+}
+
+std::ostream &operator<<(std::ostream &output, const csr_matrix &mt) {
+  int n_rows = mt.n_row();
+  int n_cols = mt.n_col();
+  const auto &row_ptr = mt.getRowPtr();
+  const auto &col_ind = mt.getColInd();
+  const auto &val = mt.getVal();
+  for (int i = 0; i < n_rows; ++i) {
+    for (int p = row_ptr[i]; p < row_ptr[i + 1]; ++p) {
+      output << "(" << i << ", " << col_ind[p] << ")" << ": " << val[p] << "\n";
+    }
+  }
+  return output;
 }
 
 csr_matrix operator+(const csr_matrix &a, const csr_matrix &b) {
@@ -263,6 +286,15 @@ csr_matrix operator-(const csr_matrix &a, const csr_matrix &b) {
     }
   }
   res_row_ptr[n_rows] = res_col_ind.size();
+  return res;
+}
+
+csr_matrix operator-(const csr_matrix &a) {
+  csr_matrix res(a);
+  auto &res_val = res.getVal();
+  for (auto &v : res_val) {
+    v = -v;
+  }
   return res;
 }
 

@@ -37,7 +37,7 @@ int main() {
       }
     }
   }
-  linalg::Matrix ma(a);
+  linalg::matrix ma(a);
 
   struct timeval start_time, end_time;
   double time;
@@ -50,7 +50,7 @@ int main() {
     (end_time.tv_usec - start_time.tv_usec) / 1000.0;
   printf("time: %.3f ms\n", time);
 
-  auto I_matrix = linalg::Matrix::eye(n);
+  auto I_matrix = linalg::matrix::eye(n);
   res = linalg::matmul(res, ma);
   printf("correctness: %d\n", test(I_matrix.getData(), res.getData(), n, n));
   return 0;
