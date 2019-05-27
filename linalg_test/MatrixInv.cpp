@@ -1,9 +1,8 @@
 #include <bits/stdc++.h>
 #include <sys/time.h>
-#include "../linalg.h"
-#include "../linalg_naive.h"
+#include "../src/linalg.h"
 using namespace std;
-const double eps = 1e-5;
+const double eps = 1e-8;
 int test(vector<vector<double>> &a, vector<vector<double>> &b, int n, int m) {
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < m; ++j) {
@@ -39,18 +38,9 @@ int main() {
     }
   }
   linalg::Matrix ma(a);
-  linalg_naive::Matrix n_ma(a);
 
   struct timeval start_time, end_time;
   double time;
-
-  // test for naive implementation
-  gettimeofday(&start_time, NULL);
-  auto n_res = linalg_naive::inv(n_ma);
-  gettimeofday(&end_time, NULL);
-  time = (end_time.tv_sec - start_time.tv_sec) * 1000.0 +
-    (end_time.tv_usec - start_time.tv_usec) / 1000.0;
-  printf("time: %.3f ms\n", time);
   
   // test for linalg
   gettimeofday(&start_time, NULL);
@@ -61,9 +51,7 @@ int main() {
   printf("time: %.3f ms\n", time);
 
   auto I_matrix = linalg::Matrix::eye(n);
-  n_res = linalg_naive::matmul(n_res, n_ma);
   res = linalg::matmul(res, ma);
-  printf("correctness1: %d\ncorrectness2: %d\n", test(I_matrix.getData(), n_res.getData(), n, n),
-      test(I_matrix.getData(), res.getData(), n, n));
+  printf("correctness: %d\n", test(I_matrix.getData(), res.getData(), n, n));
   return 0;
 }

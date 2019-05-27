@@ -1,5 +1,5 @@
-#ifndef LINALG_H
-#define LINALG_H
+#ifndef MATRIX_H
+#define MATRIX_H
 #include <vector>
 #include <iostream>
 #include <utility>
@@ -660,7 +660,7 @@ Matrix inv(const Matrix &mt) {
     if (pivot != k) {
       aug_data[k].swap(aug_data[pivot]);
     }
-    if (fabs(aug_data[k][k]) < 1e-6) {
+    if (fabs(aug_data[k][k]) < eps) {
       puts("1");
     }
     /* NotInvertibleException
@@ -672,7 +672,7 @@ Matrix inv(const Matrix &mt) {
 #pragma omp parallel for
     for (int i = k + 1; i < n; ++i) {
       double tmp = aug_data[i][k];
-      if (fabs(tmp) > 1e-7) {
+      if (fabs(tmp) > eps) {
         int num_block = (n * 2 - k) / DVEC_SIZE;
         int num_rem = (n * 2 - k) % DVEC_SIZE;
         double *p1 = &aug_data[i][k];

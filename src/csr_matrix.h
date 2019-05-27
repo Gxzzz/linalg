@@ -1,7 +1,7 @@
 #ifndef CSR_MATRIX_H
 #define CSR_MATRIX_H
-namespace sparse {
-const double eps = 1e-8;
+#include "matrix.h"
+namespace linalg {
 class csr_matrix {
 public:
   csr_matrix(int _n_rows, int _n_cols) {
