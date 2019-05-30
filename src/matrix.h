@@ -589,11 +589,12 @@ matrix sum(const matrix &mt, int row_major) {
   } else {
     matrix res(1, n_cols);
     auto &_res_data = res.getData()[0];
+    double *p_res_data = _res_data.data();
     int num_block = n_cols / DVEC_SIZE;
     int num_rem = n_cols % DVEC_SIZE;
-#pragma omp paralleo for reduction(+:_res_data[0: n])
+#pragma omp parallel for reduction(+: p_res_data[: n_cols])
     for (int i = 0; i < n_rows; ++i) {
-      double *p_res = _res_data.data();
+      double *p_res = p_res_data;
       const double *p_mt = _mt_data[i].data();
       for (int j = 0; j < num_block; ++j) {
         vec_store(p_res, vec_add(vec_load(p_mt), vec_load(p_res)));
