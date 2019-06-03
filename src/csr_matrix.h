@@ -25,6 +25,9 @@ public:
   csr_matrix &operator=(const csr_matrix &other);
   csr_matrix &operator=(csr_matrix &&other);
 
+  csr_matrix transpose() const;
+  csr_matrix map(std::function<double(double)>) const;
+
   std::vector<double> dot(const std::vector<double> &other);
   csr_matrix matmul(const csr_matrix &other);
 
@@ -123,6 +126,47 @@ csr_matrix &csr_matrix::operator=(csr_matrix &&other) {
   row_ptr.swap(other.getRowPtr());
   col_ind.swap(other.getColInd());
   return *this;
+}
+
+csr_matrix csr_matrix::transpose() const {
+  csr_matrix res(n_cols, n_rows);
+  auto &res_val = res.getVal();
+  auto &res_col_ind = res.getColInd();
+  auto &res_row_ptr = res.getRowPtr();
+  std::vector<std::pair<std::pair<int, int>, double>> tmp;
+  for (int i = 0; i < n_rows; ++i) {
+    int l = row_ptr[i], r = row_ptr[i + 1];
+    for (int j = l; j < r; ++j) {
+      tmp.push_back({{col_ind[j], i}, val[j]});
+    }
+  }
+  sort(tmp.begin(), tmp.end());
+  int row_number = -1;
+  for (auto &x : tmp) {
+    if (x.first.first > row_number) {
+      for (int k = row_number + 1; k <= x.first.first; ++k)
+        res_row_ptr[k] = res_val.size();
+      row_number = x.first.first;
+    }
+    res_col_ind.push_back(x.first.second);
+    res_val.push_back(x.second);
+  }
+  res_row_ptr[n_cols] = res_val.size();
+  return res;
+}
+
+csr_matrix csr_matrix::map(std::function<double(double)> func) const {
+  csr_matrix res(*this);
+  auto &res_val = res.getVal();
+  auto &res_col_ind = res.getColInd();
+  auto &res_row_ptr = res.getRowPtr();
+  for (int i = 0; i < n_rows; ++i) {
+    int l = row_ptr[i], r = row_ptr[i + 1];
+    for (int j = l; j < r; ++j) {
+      res_val[j] = func(res_val[j]);
+    }
+  }
+  return res;
 }
 
 std::vector<double> csr_matrix::dot(const std::vector<double> &other) {

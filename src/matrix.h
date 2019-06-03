@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 #include <cmath>
+#include <functional>
 #include "simd.h"
 namespace linalg {
 class matrix {
@@ -32,6 +33,7 @@ public:
   matrix slice(int row_start, int row_end, int row_step, int col_start, int col_end, int col_step);
   matrix transpose() const;
   matrix reshape(int _row, int _col);
+  matrix map(std::function<double(double)>) const;
 protected:
   std::vector<std::vector<double>> data;
 };
@@ -149,6 +151,20 @@ matrix matrix::reshape(int _row, int _col) {
     }
   }
   return mt;
+}
+
+matrix matrix::map(std::function<double(double)> func) const {
+  int _n_row = n_row();
+  int _n_col = n_col();
+  matrix res(*this);
+  auto &_res_data = res.getData();
+#pragma omp parallel for
+  for (int i = 0; i < _n_row; ++i) {
+    for (int j = 0; j < _n_col; ++j) {
+      _res_data[i][j] = func(_res_data[i][j]);
+    }
+  }
+  return res;
 }
 
 matrix operator+(const matrix &a, const matrix &b) {
