@@ -25,11 +25,14 @@ public:
   csr_matrix &operator=(const csr_matrix &other);
   csr_matrix &operator=(csr_matrix &&other);
 
+  static csr_matrix eye(int _size);
   csr_matrix transpose() const;
   csr_matrix map(std::function<double(double)>) const;
 
   std::vector<double> dot(const std::vector<double> &other);
   csr_matrix matmul(const csr_matrix &other);
+
+  matrix todense();
 
   friend std::ostream &operator<<(std::ostream &output, const csr_matrix &mt);
 
@@ -100,7 +103,7 @@ const std::vector<int> &csr_matrix::getRowPtr() const {
 
 std::vector<int> &csr_matrix::getRowPtr() {
   return row_ptr;
-}
+} 
 
 const std::vector<int> &csr_matrix::getColInd() const {
   return col_ind;
@@ -220,6 +223,31 @@ csr_matrix csr_matrix::matmul(const csr_matrix &other) {
     }
   }
   res_row_ptr[n_rows] = res_val.size();
+  return res;
+}
+
+csr_matrix csr_matrix::eye(int _size) {
+  csr_matrix res(_size, _size);
+  auto &res_val = res.getVal();
+  auto &res_col_ind = res.getColInd();
+  auto &res_row_ptr = res.getRowPtr();
+  res_val.assign(_size, 1);
+  res_col_ind.resize(_size);
+  for (int i = 0; i < _size; ++i)
+    res_col_ind[i] = i;
+  for (int i = 0; i <= _size; ++i)
+    res_row_ptr[i] = i;
+  return res;
+}
+
+matrix csr_matrix::todense() {
+  matrix res(n_rows, n_cols);
+  for (int r = 0; r < n_rows; ++r) {
+    int left = row_ptr[r], right = row_ptr[r + 1];
+    for (int i = left; i < right; ++i) {
+      res[r][col_ind[i]] = val[i];
+    }
+  }
   return res;
 }
 
@@ -391,6 +419,48 @@ csr_matrix operator*(const double &val, const csr_matrix &a) {
 
 csr_matrix operator*(const csr_matrix &a, const double &val) {
   return val * a;
+}
+
+csr_matrix load_csr(const char *filename) {
+  FILE *fp = fopen(filename, "r");
+  int n_rows, n_cols;
+  fscanf(fp, "%d%d", &n_rows, &n_cols);
+  csr_matrix res(n_rows, n_cols);
+  auto &res_val = res.getVal();
+  auto &res_col_ind = res.getColInd();
+  auto &res_row_ptr = res.getRowPtr();
+  int r, c;
+  double v;
+  std::vector<std::pair<std::pair<int, int>, double>> triples;
+  while (fscanf(fp, " (%d, %d): %lf", &r, &c, &v) == 3) {
+    triples.push_back({{r, c}, v});
+  }
+  fclose(fp);
+  sort(triples.begin(), triples.end());
+  for (auto x : triples) {
+    res_col_ind.push_back(x.first.second);
+    res_val.push_back(x.second);
+    ++res_row_ptr[x.first.first + 1];
+  }
+  for (int i = 1; i <= n_rows; ++i)
+    res_row_ptr[i] += res_row_ptr[i - 1];
+  return res;
+}
+
+void store_csr(const csr_matrix &mt, const char *filename) {
+  FILE *fp = fopen(filename, "w");
+  int n_rows = mt.n_row();
+  int n_cols = mt.n_col();
+  const auto &row_ptr = mt.getRowPtr();
+  const auto &col_ind = mt.getColInd();
+  const auto &val = mt.getVal();
+  fprintf(fp, "%d %d\n", n_rows, n_cols);
+  for (int i = 0; i < n_rows; ++i) {
+    for (int p = row_ptr[i]; p < row_ptr[i + 1]; ++p) {
+      fprintf(fp, "(%d, %d): %f\n", i, col_ind[p], val[p]);
+    }
+  }
+  fclose(fp);
 }
 
 }

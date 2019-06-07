@@ -9,6 +9,7 @@
 namespace linalg {
 class matrix {
 public:
+  matrix();
   matrix(const matrix &other);
   matrix(matrix &&other);
   matrix(int _Rows, int _Cols, double _val = 0.0);
@@ -17,6 +18,7 @@ public:
   const int n_row() const;
   const int n_col() const;
 
+  void assign(int _n_rows, int _n_cols);
   static matrix eye(int _size);
 
   const std::vector<std::vector<double>> &getData() const;
@@ -37,6 +39,8 @@ public:
 protected:
   std::vector<std::vector<double>> data;
 };
+
+matrix::matrix() {}
 
 matrix::matrix(const matrix &other) {
   data = other.getData();
@@ -63,6 +67,10 @@ const int matrix::n_row() const {
 
 const int matrix::n_col() const {
   return data[0].size();
+}
+
+void matrix::assign(int _n_rows, int _n_cols) {
+  data.assign(_n_rows, std::vector<double>(_n_cols));
 }
 
 matrix matrix::eye(int _size) {
@@ -745,6 +753,10 @@ matrix inv(const matrix &mt) {
     }
   }
   return res;
+}
+
+double norm(const matrix &mt) {
+  return sqrt(sum(mt * mt));
 }
 }
 #endif

@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include "../src/linalg.h"
 using namespace std;
-const double eps = 1e-8;
+const double eps = 1e-7;
 int test(vector<vector<double>> &a, vector<vector<double>> &b, int n, int m) {
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < m; ++j) {
